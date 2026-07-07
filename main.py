@@ -12,6 +12,10 @@ class Post(BaseModel):
     content: str
     published: bool  = True
     rating: Optional[int] = None
+class post1(BaseModel):
+    title: str
+    content: str
+    id: int
 
 my_posts = [{
     "title":"hello there",
@@ -27,6 +31,10 @@ def find_post(id):
     for p in my_posts:
         if p["id"] == id:
             return p
+def find_index(id):
+    for i,p in enumerate(my_posts):
+        if p['id']==id:
+            return i
 
 @app.get("/")
 def root():
@@ -58,8 +66,19 @@ def get_post(id: int):
 
 @app.delete("/posts/{id}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id:int):
-    post = find_post(id)
-    my_posts.remove(post)
+    index = find_index(id)
+    if index == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f"post with id: {id} does not exist")
+    my_posts.pop(index)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+@app.put('/posts/{id}',status_code=status.HTTP_200_OK)
+def update_post(post:post1,id:int):
+    index = find_index(id)
+    if index == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id: {id} doesn't exist")
+    my_posts[index] = post.model_dump()
+    return {'msg':'updated succesfully'}
 
 
